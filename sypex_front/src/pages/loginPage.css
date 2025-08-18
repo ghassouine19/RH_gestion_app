@@ -1,0 +1,12 @@
+.loginPageContainer{
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #39045a;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+}

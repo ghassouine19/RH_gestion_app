@@ -1,0 +1,21 @@
+package com.example.sypexback.dto;
+
+import com.example.sypexback.enums.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserDTO {
+    private Long id;
+    private String userName;
+    private String nom;
+    private String prenom;
+    private String email;
+    private Role role;
+    private double soldeConge;
+}

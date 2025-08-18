@@ -1,0 +1,89 @@
+.homepage-container {
+    text-align: center;
+    margin-top: 100px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.hero-card {
+    padding: 40px 30px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #0d47a1, #1976d2, #42a5f5);
+    color: white;
+    margin-bottom: 50px;
+    box-shadow: 0 10px 25px rgba(25, 118, 210, 0.3);
+}
+
+.hero-title {
+    font-weight: 700;
+    font-size: 2.8rem;
+    margin-bottom: 16px;
+}
+
+.brand {
+    color: #bbdefb; /* bleu très clair pour contraste */
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+    padding: 15px;
+}
+
+.login-button {
+    background: linear-gradient(90deg, #1565c0, #42a5f5) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    padding: 12px 32px !important;
+    border-radius: 50px !important;
+    font-size: 1.2rem !important;
+    transition: all 0.3s ease-in-out !important;
+    box-shadow: 0 6px 15px rgba(21, 101, 192, 0.4) !important;
+}
+
+.login-button:hover {
+    background: linear-gradient(90deg, #0d47a1, #1976d2) !important;
+    transform: translateY(-2px);
+}
+
+.login-message {
+    margin-top: 20px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #39045a; /* bleu très pâle */
+}
+
+.features-section {
+    margin-top: 40px;
+    text-align: left;
+}
+
+.features-title {
+    font-weight: 700;
+    color: #1565c0;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    max-width: 500px;
+}
+
+.features-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+    font-weight: 500;
+    color: #1e3a8a; /* bleu foncé */
+}
+
+.features-list li svg {
+    color: #42a5f5; /* bleu clair pour icônes */
+    font-size: 1.5rem;
+}
