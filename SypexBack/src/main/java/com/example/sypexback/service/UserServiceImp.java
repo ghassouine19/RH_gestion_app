@@ -42,7 +42,6 @@ public class UserServiceImp implements UserService {
         user.setNom(dto.getNom());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
-        user.setUsername(dto.getUserName());
         user.setSoldeConge(dto.getSoldeConge());
 
         userRepository.save(user);
@@ -60,9 +59,19 @@ public class UserServiceImp implements UserService {
         User user = userMapper.toEntity(dto);
         user.setSoldeConge(dto.getSoldeConge());
         user.setRole(dto.getRole());
+
+        // Récupérer et assigner le responsable si fourni
+        User responsable = null;
+        if (dto.getResponsableId() != null) {
+            responsable = userRepository.findById(dto.getResponsableId())
+                    .orElseThrow(() -> new RuntimeException("Responsable non trouvé"));
+        }
+        user.setResponsable(responsable);
+
         User userSave = userRepository.save(user);
         return userMapper.toDto(userSave);
     }
+
 
     @Override
     public User findByEmail(String email) {

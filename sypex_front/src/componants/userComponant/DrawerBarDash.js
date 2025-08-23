@@ -13,13 +13,14 @@ import MuiDrawer from '@mui/material/Drawer';
 import HomeIcon from '@mui/icons-material/Home';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BadgeIcon from '@mui/icons-material/Badge';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Avatar from '@mui/material/Avatar';
 import { Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import {useEffect, useState} from "react";
+import {getUserById} from "../../apiService/getElementApi";
 
 
 const drawerWidth = 240;
@@ -83,6 +84,18 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 const DrawerBar =({open,handleDrawerClose})=>{
 
+    const [user,setUser] = useState({nom: "", prenom: "", role: "" })
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const userId = localStorage.getItem("userId");
+            if (userId) {
+                const data = await getUserById(userId);
+                setUser(data);
+            }
+        }
+    }, []);
+
     const role = localStorage.getItem("role") || "";
 
     const section1 = [
@@ -96,7 +109,6 @@ const DrawerBar =({open,handleDrawerClose})=>{
         {text : "Profile" , icon : <BadgeIcon />, path : "/user/profile"},
     ];
     const section2 = [
-        {text : "Historique" , icon :<MenuBookIcon/> , path : "/user/historique"},
         {text : "Calendrier" , icon : <CalendarMonthIcon />, path : "/user/calendar"},
     ];
     const section3 = [
@@ -124,8 +136,8 @@ const DrawerBar =({open,handleDrawerClose})=>{
                 my : 2,border:"1px solid grey",transition : "0.25s"}}
                     alt="Travis Howard"
                     src="/static/images/avatar/2.jpg" />
-            <Typography  align='center' sx={{fontSize : open ? 17 : 0 , transition : "0.25s"}}>Abderrahmane</Typography>
-            <Typography  align='center' sx={{fontSize : open ? 15 : 0 , transition : "0.25s",color : theme.palette.info.main}}>Admin</Typography>
+            <Typography  align='center' sx={{fontSize : open ? 17 : 0 , transition : "0.25s"}}>{user.nom} {user.prenom}</Typography>
+            <Typography  align='center' sx={{fontSize : open ? 15 : 0 , transition : "0.25s",color : theme.palette.info.main}}></Typography>
 
 
             <Divider />
@@ -246,7 +258,12 @@ const DrawerBar =({open,handleDrawerClose})=>{
                 {section3.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                         <ListItemButton
-                            onClick={()=>{navigate(item.path)}}
+                            onClick={()=>{
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("role");
+                                localStorage.removeItem("user");
+                                navigate(item.path);
+                            }}
                             sx={[
                                 {
                                     minHeight: 48,

@@ -2,6 +2,8 @@ import DashBoardLayout from "../layout/DashboardLayout";
 import DashboardPage from "../pages/DashboardPage";
 import ResponsablePage from "../pages/ResponsablePage";
 import AdminPage from "../pages/AdminPage";
+import UserProfile from "../componants/userComponant/UserProfile";
+import Calendar from "../componants/userComponant/Calendar";
 
 
 export const UserRoute = [
@@ -19,6 +21,13 @@ export const UserRoute = [
             {
                 path : "/admin",
                 element: <AdminPage />
+            },
+            {
+                path : "/user/profile",
+                element: <UserProfile />
+            },{
+                path : "/user/calendar",
+                element : <Calendar />
             }
         ]
     }

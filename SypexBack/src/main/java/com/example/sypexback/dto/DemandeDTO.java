@@ -27,4 +27,6 @@ public class DemandeDTO {
     private LocalDateTime dateCreation;
     private LocalDateTime dateDecision;
     private Long idUser;
+    private String nomUser;
+    private String prenomUser;
 }

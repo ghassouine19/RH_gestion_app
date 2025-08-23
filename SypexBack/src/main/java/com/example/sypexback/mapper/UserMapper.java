@@ -10,8 +10,9 @@ import org.mapstruct.factory.Mappers;
 public interface UserMapper {
 
     @Mapping(target = "soldeConge", source = "soldeConge")
-    User toEntity(UserDTO userDTO);
+    @Mapping(target = "responsable.id", source = "responsableId")    User toEntity(UserDTO userDTO);
 
     @Mapping(target = "soldeConge", source = "soldeConge")
+    @Mapping(target = "responsableId", source = "responsable.id")
     UserDTO toDto(User user);
 }

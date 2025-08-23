@@ -34,7 +34,7 @@ const LoginForm = () => {
 
             const data = await response.json();
 
-            // Sauvegarde token et rôle dans localStorage
+            localStorage.setItem("userId", data.id);
             localStorage.setItem("token", data.token);
             localStorage.setItem("role", data.role);
 

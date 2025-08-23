@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./addUserForm.css";
 
-const ROLES = ["RESPONSABLE", "ADMIN", "EMPLOYE"]; // adapter selon tes rôles
+const ROLES = ["RESPONSABLE", "ADMIN", "EMPLOYE"];
 
 const AddUserForm = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
-        userName: "",
         nom: "",
         prenom: "",
         email: "",
         password: "",
         role: "",
         soldeConge: 0,
+        responsableId: ""
     });
 
     if (!isOpen) return null;
@@ -29,12 +29,12 @@ const AddUserForm = ({ isOpen, onClose }) => {
 
         // Validation simple
         if (
-            !formData.userName ||
             !formData.nom ||
             !formData.prenom ||
             !formData.email ||
             !formData.password ||
-            !formData.role
+            !formData.role ||
+            (formData.role === "EMPLOYE" && !formData.responsableId)
         ) {
             alert("Veuillez remplir tous les champs obligatoires.");
             return;
@@ -45,13 +45,13 @@ const AddUserForm = ({ isOpen, onClose }) => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userName: formData.userName,
                     nom: formData.nom,
                     prenom: formData.prenom,
                     email: formData.email,
                     password: formData.password,
                     role: formData.role,
-                    soldeConge: formData.soldeConge
+                    soldeConge: formData.soldeConge,
+                    responsableId: formData.role === "EMPLOYE" ? formData.responsableId : null,
                 }),
             });
 
@@ -65,13 +65,13 @@ const AddUserForm = ({ isOpen, onClose }) => {
 
             alert("Utilisateur ajouté avec succès !");
             setFormData({
-                username: "",
                 nom: "",
                 prenom: "",
                 email: "",
                 password: "",
                 role: "",
                 soldeConge: 0,
+                responsableId: "",
             });
             onClose();
 
@@ -87,10 +87,6 @@ const AddUserForm = ({ isOpen, onClose }) => {
                 <h2>Ajouter un nouvel utilisateur</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="adduser-form-grid">
-                        <label>
-                            Nom d'utilisateur :
-                            <input type="text" name="userName" value={formData.userName} onChange={handleChange} required autoFocus />
-                        </label>
 
                         <label>
                             Nom :
@@ -121,6 +117,19 @@ const AddUserForm = ({ isOpen, onClose }) => {
                                 ))}
                             </select>
                         </label>
+
+                        {formData.role === "EMPLOYE" && (
+                            <label>
+                                ID du Responsable :
+                                <input
+                                    type="number"
+                                    name="responsableId"
+                                    value={formData.responsableId}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </label>
+                        )}
 
                         <label>
                             Solde de congés :

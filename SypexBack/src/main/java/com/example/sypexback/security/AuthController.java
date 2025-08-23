@@ -37,8 +37,8 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
             User user = (User) authentication.getPrincipal();
-            String token = jwtUtil.generateToken(user.getUsername(),user.getRole().name());
-            return new LoginResponse(token, user.getRole().name());
+            String token = jwtUtil.generateToken(user.getId(), user.getUsername(),user.getRole().name());
+            return new LoginResponse(user.getId() ,token, user.getRole().name());
         } catch (AuthenticationException e) {
             throw new RuntimeException("Email ou mot de passe invalide");
         }
@@ -54,13 +54,20 @@ public class AuthController {
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setRole(request.getRole());
 
+        // Associer le responsable si le rôle est EMPLOYE
+        if (request.getRole() == Role.EMPLOYE && request.getResponsableId() != null) {
+            User responsable = userRepository.findById(request.getResponsableId())
+                    .orElseThrow(() -> new RuntimeException("Responsable non trouvé"));
+            newUser.setResponsable(responsable);
+        }
+
         userRepository.save(newUser);
 
-        // Retourner un JSON
         Map<String, String> response = new HashMap<>();
         response.put("message", "Inscription réussie");
         return ResponseEntity.ok(response);
     }
+
 
 
     @GetMapping("/me")
@@ -78,6 +85,27 @@ public class AuthController {
         UserDTO dto = userMapper.toDto(user);
         return ResponseEntity.ok(dto);
     }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @RequestBody ChangePasswordRequest request) {
+
+        User user = userRepository.findById(request.getIdUser())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Le mot de passe actuel est incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Mot de passe modifié avec succès");
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
 }

@@ -1,19 +1,48 @@
 import React, { useState, useEffect } from "react";
 import AddUserForm from "../componants/userComponant/AddUserForm";
-import { Button, Typography, Table, TableHead, TableRow, TableCell, TableBody, IconButton } from "@mui/material";
-import EditIcon from '@mui/icons-material/Edit';
-import { getAllUsers} from "../apiService/getElementApi";
+import UpdateUserForm from "../componants/userComponant/updateUserForm";
+import {
+    Container,
+    Typography,
+    Button,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
+    IconButton,
+    Paper,
+    Box,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
+import PersonIcon from "@mui/icons-material/Person";
+import { getAllUsers } from "../apiService/getElementApi";
 import { addUser } from "../apiService/addElementApi";
+import {updateUser} from "../apiService/UpdateElementApi";
+import "./adminPage.css";
 
 const AdminPage = () => {
     const [users, setUsers] = useState([]);
+    const [filteredUsers, setFilteredUsers] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [formInitialData, setFormInitialData] = useState(null);
     const [message, setMessage] = useState("");
+    const [roleFilter, setRoleFilter] = useState("ALL");
 
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        if (roleFilter === "ALL") setFilteredUsers(users);
+        else setFilteredUsers(users.filter((u) => u.role === roleFilter));
+    }, [roleFilter, users]);
 
     const fetchUsers = async () => {
         try {
@@ -27,15 +56,25 @@ const AdminPage = () => {
 
     const handleAddOrUpdateUser = async (userData) => {
         if (formInitialData) {
-            // Modification locale
-            setUsers(prev => prev.map(u => (u.id === formInitialData.id ? { ...u, ...userData } : u)));
-            setMessage(`Utilisateur "${userData.nom}" modifié.`);
+            // ⚡ cas modification
+            try {
+                const response = await updateUser(formInitialData.id, userData);
+                if (response) {
+                    setUsers((prev) =>
+                        prev.map((u) => (u.id === formInitialData.id ? response : u))
+                    );
+                    setMessage(`Utilisateur "${response.nom}" modifié.`);
+                }
+            } catch (error) {
+                console.error("Erreur API updateUser", error);
+                setMessage("Erreur lors de la modification de l'utilisateur.");
+            }
         } else {
-            // Ajout via API
+            // ⚡ cas ajout
             try {
                 const response = await addUser(userData);
                 if (response) {
-                    setUsers(prev => [...prev, response]);
+                    setUsers((prev) => [...prev, response]);
                     setMessage(`Utilisateur "${response.nom}" ajouté.`);
                 }
             } catch (error) {
@@ -55,50 +94,111 @@ const AdminPage = () => {
         setIsFormOpen(true);
     };
 
+    const renderRoleIcon = (role) => {
+        switch (role) {
+            case "ADMIN":
+                return <AdminPanelSettingsIcon color="primary" style={{ marginRight: 5 }} />;
+            case "RESPONSABLE":
+                return <SupervisorAccountIcon color="success" style={{ marginRight: 5 }} />;
+            case "EMPLOYE":
+                return <PersonIcon color="action" style={{ marginRight: 5 }} />;
+            default:
+                return null;
+        }
+    };
+
     return (
-        <div style={{ padding: 20 }}>
-            <Typography variant="h4" gutterBottom>Gestion des utilisateurs</Typography>
+        <Container maxWidth="lg" className="admin-container">
+            <Typography variant="h4" gutterBottom className="admin-title">
+                Gestion des utilisateurs
+            </Typography>
 
-            <Button variant="contained" onClick={handleOpenAdd} style={{ marginBottom: 20 }}>
-                Ajouter un utilisateur
-            </Button>
+            {message && (
+                <Typography variant="body1" className="admin-message">
+                    {message}
+                </Typography>
+            )}
 
-            {message && <Typography color="success.main" gutterBottom>{message}</Typography>}
+            <Box display="flex" justifyContent="space-between" mb={2}>
+                <Button variant="contained" color="primary" onClick={handleOpenAdd}>
+                    Ajouter un utilisateur
+                </Button>
 
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Nom</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>Rôle</TableCell>
-                        <TableCell>Actions</TableCell>
-                    </TableRow>
-                </TableHead>
+                <FormControl variant="outlined" size="small" style={{ minWidth: 150 }}>
+                    <InputLabel>Filtrer par rôle</InputLabel>
+                    <Select
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        label="Filtrer par rôle"
+                    >
+                        <MenuItem value="ALL">Tous</MenuItem>
+                        <MenuItem value="ADMIN">Admin</MenuItem>
+                        <MenuItem value="RESPONSABLE">Responsable</MenuItem>
+                        <MenuItem value="EMPLOYE">Employé</MenuItem>
+                    </Select>
+                </FormControl>
+            </Box>
 
-                <TableBody>
-                    {users.map(user => (
-                        <TableRow key={user.id}>
-                            <TableCell>{user.nom}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.role}</TableCell>
-                            <TableCell>
-                                <IconButton color="primary" aria-label="modifier" onClick={() => handleOpenEdit(user)}>
-                                    <EditIcon />
-                                </IconButton>
-                                {/* Delete supprimé pour le moment */}
-                            </TableCell>
+            <Paper className="admin-table-wrapper" elevation={3}>
+                <Table>
+                    <TableHead className="admin-table-head">
+                        <TableRow>
+                            <TableCell>Nom</TableCell>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Rôle</TableCell>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHead>
+                    <TableBody>
+                        {filteredUsers.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={3} align="center">
+                                    Aucun utilisateur trouvé.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredUsers.map((user) => (
+                                <TableRow key={user.id} className="admin-table-row">
+                                    <TableCell>{user.nom}</TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>
+                                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <span>
+                        {renderRoleIcon(user.role)}
+                          {user.role}
+                      </span>
+                                            <IconButton
+                                                color="primary"
+                                                aria-label="modifier"
+                                                size="small"
+                                                onClick={() => handleOpenEdit(user)}
+                                            >
+                                                <EditIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </Paper>
 
-            <AddUserForm
-                isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                onAddUser={handleAddOrUpdateUser}
-                initialData={formInitialData}
-            />
-        </div>
+            {/* ⚡ afficher AddUserForm ou UpdateUserForm selon le cas */}
+            {formInitialData ? (
+                <UpdateUserForm
+                    isOpen={isFormOpen}
+                    onClose={() => setIsFormOpen(false)}
+                    onUpdateUser={handleAddOrUpdateUser}
+                    user={formInitialData}
+                />
+            ) : (
+                <AddUserForm
+                    isOpen={isFormOpen}
+                    onClose={() => setIsFormOpen(false)}
+                    onAddUser={handleAddOrUpdateUser}
+                />
+            )}
+        </Container>
     );
 };
 

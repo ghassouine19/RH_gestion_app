@@ -88,7 +88,7 @@ const TopBarDash = ({open,handleDrawerOpen,setMode})=>{
                         <NotificationsNoneOutlinedIcon/>
                     </IconButton>
                     <IconButton color='inherit' onClick={() => {
-                        navigate("/profile");
+                        navigate("/user/profile");
                     }}>
                         <PersonOutlineOutlinedIcon/>
                     </IconButton>

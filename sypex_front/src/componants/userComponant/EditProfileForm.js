@@ -1,80 +1,87 @@
 import React, { useState, useEffect } from "react";
-import "./userProfile.css";
+import {jwtDecode} from "jwt-decode";
+import { changePasswordApi } from "../../apiService/UpdateElementApi";
+import "./editProfileForm.css";
 
-const EditProfileForm = ({ user, onClose, onSave }) => {
-    const [formData, setFormData] = useState({
-        nom: "",
-        prenom: "",
-        email: "",
-        password: "",
-        role:"EMPLOYE",
-    });
+const EditProfileForm = ({ onClose }) => { // Ajouter onClose si tu veux fermer une popup
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [message, setMessage] = useState("");
+    const [idUser, setIdUser] = useState(null);
+
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
-        if (user) {
-            setFormData({
-                nom: user.nom || "",
-                email: user.email || "",
-                password: "",
-            });
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                const userId = decoded.id || decoded.userId || decoded.sub;
+                setIdUser(userId);
+            } catch (err) {
+                console.error("Erreur décodage JWT :", err);
+            }
         }
-    }, [user]);
+    }, [token]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!idUser) {
+            setMessage("Utilisateur introuvable. Veuillez vous reconnecter.");
+            return;
+        }
+        if (!currentPassword || !newPassword) {
+            setMessage("Veuillez remplir les deux champs.");
+            return;
+        }
+
+        try {
+            console.log("Envoi données :", { idUser, currentPassword, newPassword });
+            await changePasswordApi(
+                { idUser: Number(idUser), currentPassword, newPassword },
+                token
+            );
+            setMessage("Mot de passe modifié avec succès !");
+            setCurrentPassword("");
+            setNewPassword("");
+        } catch (error) {
+            console.error(error);
+            const errMsg =
+                error.response?.data?.message ||
+                "Erreur lors du changement de mot de passe.";
+            setMessage(errMsg);
+        }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(formData);
+    const handleClose = () => {
+        // Réinitialiser les champs et message
+        setCurrentPassword("");
+        setNewPassword("");
+        setMessage("");
+        if (onClose) onClose(); // Si le formulaire est dans une popup
     };
 
     return (
-        <div className="edit-profile-modal">
-            <div className="form-personne-container">
-                <div className="form-header">
-                    <h2>Modifier le profil</h2>
-                    <button className="form-close-button" onClick={onClose}>✕</button>
-                </div>
-
-                <form className="form-personne" onSubmit={handleSubmit}>
-                    <input
-                        name="nom"
-                        value={formData.nom}
-                        onChange={handleChange}
-                        placeholder="Nom"
-                        required
-                    />
-                    <input
-                        name="prenom"
-                        value={formData.prenom}
-                        onChange={handleChange}
-                        placeholder="Prenom"
-                        required
-                    />
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Email"
-                        required
-                    />
-                    <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Nouveau mot de passe"
-                    />
-
-                    <button className="form-button-submit" type="submit">
-                        Enregistrer
-                    </button>
-                </form>
+        <form onSubmit={handleSubmit}>
+            <input
+                type="password"
+                placeholder="Mot de passe actuel"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+            <input
+                type="password"
+                placeholder="Nouveau mot de passe"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <div style={{ marginTop: "10px" }}>
+                <button type="submit">Changer le mot de passe</button>
+                <button type="button" onClick={handleClose} style={{ marginLeft: "10px" }}>
+                    Annuler / Fermer
+                </button>
             </div>
-        </div>
+            {message && <p>{message}</p>}
+        </form>
     );
 };
 

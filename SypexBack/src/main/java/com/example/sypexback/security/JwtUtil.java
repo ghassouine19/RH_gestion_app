@@ -22,9 +22,18 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, String role) {
+    public Long extractId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token).getBody();
+        return claims.get("id", Long.class);
+    }
+
+    public String generateToken(Long id,String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
+                .claim("id",id)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))

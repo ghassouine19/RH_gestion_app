@@ -25,7 +25,6 @@ public class User implements Serializable,UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
     private String nom;
     private String prenom;
     private String email;
@@ -36,6 +35,10 @@ public class User implements Serializable,UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Demande> demandes;
+
+    @ManyToOne
+    @JoinColumn(name = "responsable_id")
+    private User responsable;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

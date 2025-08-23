@@ -10,10 +10,12 @@ import com.example.sypexback.repository.DemandeRepository;
 import com.example.sypexback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,25 +36,54 @@ public class DemandeServiceImp implements DemandeService {
         dto.setDateCreation(LocalDateTime.now());
         dto.setDateDecision(null);
 
+        // Convert DTO en entity sans setter l'user
         Demande demande = demandeMapper.toEntity(dto);
 
-        Demande demandeSave = demandeRepository.save(demande);
-
-        List<User> responsables = userRepository.findAllByRole(Role.RESPONSABLE);
-        if (responsables.isEmpty()) {
-            throw new RuntimeException("No responsables found");
+        // Récupérer l'utilisateur connecté depuis le SecurityContext
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            throw new RuntimeException("Utilisateur non authentifié");
         }
 
-        User responsable = responsables.get(0);
+        String email = auth.getName(); // normalement c'est l'email de l'utilisateur
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        emailService.sendEmail(
-                responsable.getEmail(),
-                "Nouvelle demande de congé",
-                "L'utilisateur " + demandeSave.getUser().getNom() + " a soumis une nouvelle demande."
-        );
+        // Associer l'utilisateur connecté à la demande
+        demande.setUser(currentUser);
+
+        // Vérifier si c'est un USER normal
+        if (currentUser.getRole() == Role.EMPLOYE) {
+            User responsable = currentUser.getResponsable();
+            if (responsable == null) {
+                throw new RuntimeException("Vous devez avoir un responsable pour créer une demande.");
+            }
+
+            // Envoyer email au responsable
+            emailService.sendEmail(
+                    responsable.getEmail(),
+                    "Nouvelle demande de congé",
+                    "L'utilisateur " + currentUser.getNom() + " " + currentUser.getPrenom() + " a soumis une nouvelle demande."
+            );
+        }
+
+        // Si ADMIN ou RESPONSABLE → pas besoin de responsable, il peut créer pour lui-même
+        else if (currentUser.getRole() == Role.RESPONSABLE || currentUser.getRole() == Role.ADMIN) {
+            emailService.sendEmail(
+                    currentUser.getEmail(),
+                    "Nouvelle demande de congé",
+                    "Votre demande a été enregistrée avec succès."
+            );
+        }
+
+        // Sauvegarder la demande
+        Demande demandeSave = demandeRepository.save(demande);
 
         return demandeMapper.toDto(demandeSave);
     }
+
+
+
 
     @Override
     public DemandeDTO getDemandeById(Long id) {
@@ -69,33 +100,63 @@ public class DemandeServiceImp implements DemandeService {
     }
 
     @Override
-    public DemandeDTO getDemandesByUserId(Long userId) {
-        Demande demande = demandeRepository.findByUserId(userId);
-        return demandeMapper.toDto(demande);
-
+    public List<DemandeDTO> getDemandesByUserId(Long userId) {
+        List<Demande> demandes = demandeRepository.findByUser_Id(userId);
+        return demandes.stream()
+                .map(d-> demandeMapper.toDto(d))
+                .collect(Collectors.toList());
     }
 
     @Override
     public DemandeDTO updateStatutDemande(Long id, StatutDemande statut) {
-        Demande demande = demandeRepository.findById(id).orElseThrow(() -> new RuntimeException("Demande not found"));
+        Demande demande = demandeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Demande not found"));
 
         demande.setStatut(statut);
-        if(statut == StatutDemande.ACCEPTE) {
+
+        if (statut == StatutDemande.ACCEPTE) {
             User user = demande.getUser();
-            int jours = (int) ChronoUnit.DAYS.between(
-                    demande.getDateDebut(), demande.getDateFin()) + 1;
+
+            // 🔹 Calcul des jours ouvrables (hors samedi et dimanche)
+            int jours = 0;
+            LocalDateTime date = demande.getDateDebut();
+            while (!date.isAfter(demande.getDateFin())) {
+                DayOfWeek jour = date.getDayOfWeek();
+                if (jour != DayOfWeek.SATURDAY && jour != DayOfWeek.SUNDAY) {
+                    jours++;
+                }
+                date = date.plusDays(1);
+            }
+
             user.setSoldeConge(user.getSoldeConge() - jours);
             userRepository.save(user);
         }
+
         demande.setDateDecision(LocalDateTime.now());
         Demande demandeSave = demandeRepository.save(demande);
 
-        String message = statut == StatutDemande.ACCEPTE ? "Demande accepted" : "Demande rejected";
+        String message = (statut == StatutDemande.ACCEPTE)
+                ? "Demande accepted"
+                : "Demande rejected";
 
         emailService.sendEmail(
-          demandeSave.getUser().getEmail(),"Mise a jour de votre demande",message
+                demandeSave.getUser().getEmail(),
+                "Mise a jour de votre demande",
+                message
         );
 
         return demandeMapper.toDto(demandeSave);
+    }
+
+
+    @Override
+    public List<Demande> getDemandesForUser(User user) {
+        if(user.getRole().equals(Role.EMPLOYE)) {
+            return demandeRepository.findByUser_Id(user.getId());
+        } else if(user.getRole().equals(Role.RESPONSABLE)) {
+            return demandeRepository.findAllByResponsable(user.getId());
+        } else {
+            return demandeRepository.findAll();
+        }
     }
 }

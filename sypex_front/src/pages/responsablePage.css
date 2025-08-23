@@ -1,31 +1,51 @@
 .resp-container {
-    margin-top: 100px;
+    margin-top: 50px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #222;
+    color: #333;
 }
 
 .resp-title {
+    text-align: center;
     color: #1976d2;
     font-weight: 700;
-    margin-bottom: 30px;
-    text-align: center;
+    margin-bottom: 25px;
 }
 
 .resp-message {
+    text-align: center;
     color: #2e7d32;
     font-weight: 600;
     margin-bottom: 20px;
-    text-align: center;
     font-size: 1.1rem;
 }
 
-.resp-table-container {
+/* Table */
+.resp-table-wrapper {
     overflow-x: auto;
+    border-radius: 10px;
 }
 
+.resp-table-head {
+    background-color: #f4f6f8;
+}
+
+.resp-table-head th {
+    font-weight: 600;
+    color: #555;
+}
+
+.resp-table-row:hover {
+    background-color: #f9f9f9;
+}
+
+/* Actions */
 .resp-actions-cell {
     display: flex;
-    gap: 12px;
+    gap: 10px;
+}
+
+.resp-actions-cell button {
+    margin: 5px;
 }
 
 .resp-reject-btn {
@@ -35,7 +55,7 @@
 
 .resp-reject-btn:hover {
     background-color: #d32f2f !important;
-    color: white !important;
+    color: #fff !important;
 }
 
 /* Responsive */

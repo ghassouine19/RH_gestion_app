@@ -10,7 +10,8 @@ import org.mapstruct.factory.Mappers;
 public interface DemandeMapper {
 
     @Mapping(source = "user.id", target = "idUser")
-    DemandeDTO toDto(Demande demande);
-    @Mapping(source = "idUser", target = "user.id")
+    @Mapping(source = "user.nom", target = "nomUser")
+    @Mapping(source = "user.prenom", target = "prenomUser")    DemandeDTO toDto(Demande demande);
+
     Demande toEntity(DemandeDTO dto);
 }

@@ -21,7 +21,7 @@ public class Demande implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Enumerated(EnumType.STRING)
+
     private TypeConge type;
     private LocalDateTime dateDebut;
     private LocalDateTime dateFin;
@@ -33,5 +33,6 @@ public class Demande implements Serializable {
     private LocalDateTime dateDecision;
 
     @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }
