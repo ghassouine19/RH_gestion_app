@@ -40,9 +40,17 @@ public class UserServiceImp implements UserService {
     public UserDTO updateUser(Long id, UserDTO dto) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setNom(dto.getNom());
+        user.setPrenom(dto.getPrenom());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
         user.setSoldeConge(dto.getSoldeConge());
+        if (dto.getResponsableId() != null) {
+            User responsable = userRepository.findById(dto.getResponsableId())
+                    .orElseThrow(() -> new RuntimeException("Responsable non trouvé"));
+            user.setResponsable(responsable);
+        } else {
+            user.setResponsable(null); // si on veut autoriser à enlever le responsable
+        }
 
         userRepository.save(user);
         return userMapper.toDto(user);

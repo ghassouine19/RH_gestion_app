@@ -109,7 +109,9 @@ const DrawerBar =({open,handleDrawerClose})=>{
         {text : "Profile" , icon : <BadgeIcon />, path : "/user/profile"},
     ];
     const section2 = [
-        {text : "Calendrier" , icon : <CalendarMonthIcon />, path : "/user/calendar"},
+        ...(role === "ADMIN"
+        ? [{text : "Calendrier" , icon : <CalendarMonthIcon />, path : "/user/calendar"}]
+        : []),
     ];
     const section3 = [
         {text : "logout", icon :<LogoutIcon/>,path : "/"}

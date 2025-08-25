@@ -84,7 +84,7 @@ const UserProfile = () => {
                 </div>
                 <div className="form-button-container">
                     <button className="form-button-submit" onClick={() => setShowEditPopup(true)}>
-                        Modifier mes informations
+                        Modifier mon password
                     </button>
                 </div>
             </div>

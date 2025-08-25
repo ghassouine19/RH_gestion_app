@@ -53,7 +53,13 @@ export const deleteData = async (url) =>{
 
     if(!response.ok) throw new Error(`Erreur API: ${response.status}`);
 
-    return await response.json();
+    if (response.status === 204) {
+        return null;
+    }
+
+    const text = await response.text();
+
+    return text ? JSON.parse(text) : null;
 }
 
 /*cette fonction compatible avec tout les operations de update*/

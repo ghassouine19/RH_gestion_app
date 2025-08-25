@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {jwtDecode} from "jwt-decode";
 import "./addUserForm.css";
 import { updateUser } from "../../apiService/UpdateElementApi";
 
 const ROLES = ["RESPONSABLE", "ADMIN", "EMPLOYE"];
 
-const UpdateUserForm = ({ isOpen, onClose, user }) => {
+const UpdateUserForm = ({ isOpen, onClose, user, onUpdateUser }) => {
     const [formData, setFormData] = useState({
         nom: "",
         prenom: "",
@@ -14,23 +13,7 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
         soldeConge: 0,
         responsableId: ""
     });
-    const [idUser, setIdUser] = useState(null);
 
-    const token = localStorage.getItem("token");
-
-    // Extraire l'ID depuis le JWT
-    useEffect(() => {
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setIdUser(decoded.id || decoded.userId || decoded.sub);
-            } catch (err) {
-                console.error("Erreur décodage JWT :", err);
-            }
-        }
-    }, [token]);
-
-    // Charger les données du user reçu en props
     useEffect(() => {
         if (user) {
             setFormData({
@@ -39,7 +22,7 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
                 email: user.email || "",
                 role: user.role || "",
                 soldeConge: user.soldeConge || 0,
-                responsableId: user.responsable ? user.responsable.id : ""
+                responsableId: user.responsableId ?? ""  // ✅ gère null/undefined
             });
         }
     }, [user]);
@@ -50,7 +33,12 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: name === "soldeConge" ? Number(value) : value,
+            [name]:
+                name === "soldeConge"
+                    ? Number(value)
+                    : name === "responsableId"
+                        ? value ? Number(value) : null // ✅ convertir en nombre
+                        : value,
         }));
     };
 
@@ -69,24 +57,28 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
         }
 
         try {
-            const userId = user?.id || idUser;
             const payload = {
+                id: user.id,
                 nom: formData.nom,
                 prenom: formData.prenom,
                 email: formData.email,
                 role: formData.role,
                 soldeConge: formData.soldeConge,
-                responsableId: formData.role === "EMPLOYE" ? formData.responsableId : null,
+                responsableId:
+                    formData.role === "EMPLOYE" ? formData.responsableId : null,
             };
 
-            const data = await updateUser(userId,payload);
-            console.log("Réponse backend update:", data);
+            console.log("📤 Payload envoyé au backend:", payload);
 
-            alert("Utilisateur mis à jour avec succès !");
+            const updatedUser = await updateUser(user.id, payload);
+            console.log("✅ Réponse backend update:", updatedUser);
+
+            if (onUpdateUser) {
+                onUpdateUser(updatedUser); // rafraîchir la liste côté parent
+            }
             onClose();
-
-        } catch (error) {
-            console.error("Erreur update:", error);
+        } catch (err) {
+            console.error("❌ Erreur update:", err);
             alert("Erreur lors de la mise à jour. Veuillez réessayer.");
         }
     };
@@ -97,7 +89,6 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
                 <h2>Modifier l'utilisateur</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="adduser-form-grid">
-
                         <label>
                             Nom :
                             <input
@@ -133,7 +124,12 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
 
                         <label>
                             Rôle :
-                            <select name="role" value={formData.role} onChange={handleChange} required>
+                            <select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                required
+                            >
                                 <option value="">--Choisir un rôle--</option>
                                 {ROLES.map((role) => (
                                     <option key={role} value={role}>
@@ -149,7 +145,7 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
                                 <input
                                     type="number"
                                     name="responsableId"
-                                    value={formData.responsableId}
+                                    value={formData.responsableId || ""}
                                     onChange={handleChange}
                                     required
                                 />
@@ -170,7 +166,11 @@ const UpdateUserForm = ({ isOpen, onClose, user }) => {
 
                     <div className="adduser-buttons">
                         <button type="submit">Mettre à jour</button>
-                        <button type="button" onClick={onClose} className="btn-annuler">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="btn-annuler"
+                        >
                             Annuler
                         </button>
                     </div>
