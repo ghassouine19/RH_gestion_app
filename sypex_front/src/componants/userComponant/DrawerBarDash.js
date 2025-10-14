@@ -19,6 +19,7 @@ import { Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import {useEffect, useState} from "react";
 import {getUserById} from "../../apiService/getElementApi";
 
@@ -100,7 +101,7 @@ const DrawerBar =({open,handleDrawerClose})=>{
 
     const section1 = [
         ...(role === "ADMIN"
-            ? [{text : "Gestion des utilisateurs" , icon : <SupervisorAccountIcon />, path : "/admin"}]
+            ? [{text : "Gestion des utilisateurs" , icon : <SupervisorAccountIcon />, path : "/admin"}, {text : "Dashboard" , icon : <DashboardIcon />, path : "/admin/dashboard"}]
             : []),
         ...(role === "RESPONSABLE" || role === "ADMIN"
             ? [{text : "Gestion des demandes" , icon : <AdminPanelSettingsIcon />, path : "/respo"}]
@@ -148,21 +149,12 @@ const DrawerBar =({open,handleDrawerClose})=>{
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                         <ListItemButton
                             onClick={()=>{navigate(item.path)}}
-                            sx={[
-                                {
-                                    minHeight: 48,
-                                    px: 2.5,
-                                    bgcolor : location.pathname === item.path ?
-                                        theme.palette.mode === "dark"? "#39045A" : "#BFACE2"  : null
-                                },
-                                open
-                                    ? {
-                                        justifyContent: 'initial',
-                                    }
-                                    : {
-                                        justifyContent: 'center',
-                                    },
-                            ]}
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                                bgcolor: location.pathname === item.path ? theme.palette.action.selected : 'transparent',
+                            }}
                         >
                             <ListItemIcon
                                 sx={[
@@ -204,22 +196,12 @@ const DrawerBar =({open,handleDrawerClose})=>{
                 {section2.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                         <ListItemButton
-                            onClick={()=>{navigate(item.path)}}
-                            sx={[
-                                {
-                                    minHeight: 48,
-                                    px: 2.5,
-                                    bgcolor : location.pathname === item.path ?
-                                        theme.palette.mode === "dark"? "#39045A" : "#BFACE2"   : null
-                                },
-                                open
-                                    ? {
-                                        justifyContent: 'initial',
-                                    }
-                                    : {
-                                        justifyContent: 'center',
-                                    },
-                            ]}
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                                bgcolor: location.pathname === item.path ? theme.palette.action.selected : 'transparent',
+                            }}
                         >
                             <ListItemIcon
                                 sx={[

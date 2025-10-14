@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { createTheme, styled} from '@mui/material/styles';
+import { styled} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import TopBarDash from '../componants/userComponant/TopBarDash';
 import DrawerBar from '../componants/userComponant/DrawerBarDash';
-import { ThemeProvider } from '@emotion/react';
 import { Outlet } from 'react-router-dom';
 
 
@@ -29,35 +28,11 @@ export default function DashBoardLayout() {
         setOpen(false);
     };
 
-    const getDesignToken = (mode) => ({
-        palette : {
-            mode ,
-            ...(mode === 'light'?
-                    {
-                        //palette value pour light mode
-
-                    }
-                    :{
-                        //palette value pour dark mode
-
-                    }
-            ),
-
-        },
-    });
-    const [mode , setMode] = React.useState(
-        localStorage.getItem("modeColor")?
-            localStorage.getItem("modeColor") : "light"
-    );
-    const theme = React.useMemo(()=>createTheme(getDesignToken(mode)),[mode]);
-
     return (
-
-        <ThemeProvider theme={theme} >
 
             <Box sx={{ display: 'flex' }}>
                 <CssBaseline />
-                <TopBarDash open={open} handleDrawerOpen={handleDrawerOpen} setMode={setMode}/>
+                <TopBarDash open={open} handleDrawerOpen={handleDrawerOpen} />
 
                 <DrawerBar open={open} handleDrawerClose={handleDrawerClose}/>
 
@@ -70,8 +45,6 @@ export default function DashBoardLayout() {
 
                 </Box>
             </Box>
-
-        </ThemeProvider>
 
     );
 }

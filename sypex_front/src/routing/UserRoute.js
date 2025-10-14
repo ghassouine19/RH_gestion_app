@@ -5,6 +5,7 @@ import AdminPage from "../pages/AdminPage";
 import UserProfile from "../componants/userComponant/UserProfile";
 import Calendar from "../componants/userComponant/Calendar";
 import ProtectedRoute from "./ProtectedRoute";
+import AdminDashboardPage from "../pages/AdminDashboardPage";
 
 export const UserRoute = [
     {
@@ -50,6 +51,15 @@ export const UserRoute = [
                 element : (
                     <ProtectedRoute
                         element={<Calendar />}
+                        allowedRoles={["ADMIN"]}
+                    />
+                ),
+            },
+            {
+                path : "/admin/dashboard",
+                element: (
+                    <ProtectedRoute
+                        element={<AdminDashboardPage />}
                         allowedRoles={["ADMIN"]}
                     />
                 ),

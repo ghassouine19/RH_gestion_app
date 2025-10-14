@@ -1,36 +1,18 @@
 import React, { useEffect, useState } from "react";
 import {
     Box,
-    Button,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
     Typography,
     Paper,
     Grid,
-    Divider,
+    useTheme,
+    Button,
 } from "@mui/material";
-import EditCalendarIcon from '@mui/icons-material/EditCalendar';
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import WorkIcon from "@mui/icons-material/Work";
-import EventIcon from "@mui/icons-material/Event";
-import PendingActionsIcon from "@mui/icons-material/PendingActions";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import DemandeForm from "../componants/userComponant/DemandeForm";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { getDemandeByUserId, getUserById } from "../apiService/getElementApi";
-import "./dashboardPage.css";
+import DemandeForm from "../componants/userComponant/DemandeForm";
 
-// --- Enum des statuts
-const StatutDemande = {
-    EN_ATTENTE: "EN_ATTENTE",
-    ACCEPTE: "ACCEPTE",
-    REFUSE: "REFUSE",
-};
-
-// --- util: decode JWT
+// --- Helper functions ---
 function parseJwt(token) {
     try {
         const base64Url = token.split(".")[1];
@@ -44,22 +26,8 @@ function parseJwt(token) {
         );
         return JSON.parse(jsonPayload);
     } catch (e) {
-        console.error("parseJwt error:", e);
         return {};
     }
-}
-
-function extractRole(payload) {
-    let role =
-        payload.role ||
-        (Array.isArray(payload.roles) && payload.roles[0]) ||
-        (Array.isArray(payload.authorities) && payload.authorities[0]) ||
-        payload.scope;
-    if (Array.isArray(role)) role = role[0];
-    if (typeof role === "string" && role.startsWith("ROLE_")) {
-        role = role.replace("ROLE_", "");
-    }
-    return role;
 }
 
 function extractUserId(payload) {
@@ -71,15 +39,78 @@ function extractUserId(payload) {
     );
 }
 
-function formatDate(dateString) {
-    if (!dateString) return "";
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", options);
-}
+// --- New Components ---
+
+const StatCard = ({ title, value, icon }) => {
+    const theme = useTheme();
+    return (
+        <Paper sx={{
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            height: 160,
+            justifyContent: 'space-between',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.4)',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',
+        }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <Typography variant="h6" color="text.secondary">{title}</Typography>
+                {icon}
+            </Box>
+            <Typography variant="h3" sx={{ fontWeight: 'bold' }}>{value}</Typography>
+        </Paper>
+    );
+};
+
+const LeaveTypeChart = ({ data }) => {
+    const theme = useTheme();
+    const COLORS = [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.error.main, theme.palette.warning.main];
+
+    const leaveTypeData = data.reduce((acc, demande) => {
+        if (demande.statut === 'ACCEPTE') {
+            const type = demande.type || 'N/A';
+            const existingType = acc.find(item => item.name === type);
+            if (existingType) {
+                existingType.value += 1;
+            } else {
+                acc.push({ name: type, value: 1 });
+            }
+        }
+        return acc;
+    }, []);
+
+    return (
+        <Paper sx={{
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            height: 400,
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.4)',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',
+        }}>
+            <Typography variant="h5" gutterBottom>
+                Vacation Types
+            </Typography>
+            <ResponsiveContainer>
+                <PieChart>
+                    <Pie data={leaveTypeData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={80} outerRadius={120} fill="#8884d8" paddingAngle={5} label>
+                        {leaveTypeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
+            </ResponsiveContainer>
+        </Paper>
+    );
+};
+
 
 const DashboardPage = () => {
-    const [user, setUser] = useState({ id: null, nom: "",prenom: "", email: "", role: "", statut: "", soldeConge: null });
+    const [user, setUser] = useState({ id: null, nom: "", prenom: "", email: "", role: "", statut: "", soldeConge: 0 });
     const [demandes, setDemandes] = useState([]);
     const [openForm, setOpenForm] = useState(false);
     const token = localStorage.getItem("token");
@@ -88,144 +119,70 @@ const DashboardPage = () => {
         if (!token) return;
         const payload = parseJwt(token);
         const id = extractUserId(payload);
-        const role = extractRole(payload);
         if (id) {
-            setUser((prev) => ({ ...prev, id, role }));
-            localStorage.setItem("userId", String(id));
+            setUser((prev) => ({ ...prev, id }));
         }
     }, [token]);
 
     useEffect(() => {
         if (user.id) {
             getUserById(user.id)
-                .then((u) =>
-                    setUser((prev) => ({
-                        ...prev,
-                        nom: u.nom,
-                        prenom: u.prenom,
-                        email: u.email,
-                        statut: u.statut,
-                        soldeConge: u.soldeConge,
-                    }))
-                )
+                .then((u) => setUser(u))
                 .catch((err) => console.error("Erreur user:", err));
+            getDemandeByUserId(user.id)
+                .then((d) => setDemandes(d))
+                .catch((err) => console.error("Erreur demandes:", err));
         }
     }, [user.id]);
 
-    useEffect(() => {
-        if (user.id) fetchDemandes(user.id);
-    }, [user.id]);
-
-    const fetchDemandes = async (id) => {
-        try {
-            const data = await getDemandeByUserId(id);
-            setDemandes(data);
-        } catch (error) {
-            console.error("Erreur chargement demandes :", error);
-        }
+    const handleAddDemande = (newDemande) => {
+        setDemandes(prev => [...prev, newDemande]);
     };
 
-    // --- rendu du statut
-    const renderStatut = (statut) => {
-        switch (statut) {
-            case StatutDemande.ACCEPTE:
-                return (
-                    <span className="status-approved">
-                        <CheckCircleIcon /> Statut : {statut}
-                    </span>
-                );
-            case StatutDemande.REFUSE:
-                return (
-                    <span className="status-refused">
-                        <PendingActionsIcon /> Statut : {statut}
-                    </span>
-                );
-            case StatutDemande.EN_ATTENTE:
-            default:
-                return (
-                    <span className="status-pending">
-                        <PendingActionsIcon /> Statut : {statut}
-                    </span>
-                );
-        }
-    };
+    const approvedDemandes = demandes.filter(d => d.statut === 'ACCEPTE');
+    const daysTaken = approvedDemandes.reduce((acc, d) => {
+        const start = new Date(d.dateDebut);
+        const end = new Date(d.dateFin);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return acc + diffDays;
+    }, 0);
+
+    const remainingBalance = user.soldeConge - daysTaken;
 
     return (
-        <Box className="dashboard-container">
+        <Box sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    Welcome, {user.prenom} {user.nom}
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<AddCircleIcon />}
+                    onClick={() => setOpenForm(true)}
+                >
+                    New Request
+                </Button>
+            </Box>
             <Grid container spacing={4}>
-                {/* Profil utilisateur */}
-                <Grid item xs={12} md={4}>
-                    <Paper className="user-card">
-                        <Typography variant="h5" gutterBottom>
-                            Profil utilisateur
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <div className="user-info">
-                            <PersonIcon className="icon" />
-                            <span>{user.nom || "Chargement..."} {user.prenom}</span>
-                        </div>
-                        <div className="user-info">
-                            <EmailIcon className="icon" />
-                            <span>{user.email || "Chargement..."}</span>
-                        </div>
-                        <div className="user-info">
-                            <WorkIcon className="icon" />
-                            <span>{user.role || "Chargement..."}</span>
-                        </div>
-                        <div className="user-info">
-                            <EditCalendarIcon className="icon" />
-                            <span>{user.soldeConge || "Chargement..."} jours</span>
-                        </div>
-                    </Paper>
+                <Grid item xs={12} sm={6} md={4}>
+                    <StatCard title="Remaining Vacation Balance" value={`${remainingBalance} days`} />
                 </Grid>
-
-                {/* Demandes */}
-                <Grid item xs={12} md={8}>
-                    <Paper className="demande-card">
-                        <Box className="demande-header">
-                            <Typography variant="h5">Mes demandes de congés</Typography>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddCircleIcon />}
-                                onClick={() => setOpenForm(true)}
-                            >
-                                Nouvelle demande
-                            </Button>
-                        </Box>
-                        <Divider sx={{ mb: 2 }} />
-
-                        {demandes.length === 0 ? (
-                            <Typography>Aucune demande enregistrée.</Typography>
-                        ) : (
-                            <List className="demande-list">
-                                {demandes.map((c) => (
-                                    <ListItem key={c.id} divider className="demande-item">
-                                        <ListItemIcon>
-                                            <EventIcon />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={`${c.type} du ${formatDate(
-                                                c.dateDebut
-                                            )} au ${formatDate(c.dateFin)}`}
-                                            secondary={renderStatut(c.statut)}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                    </Paper>
+                <Grid item xs={12} sm={6} md={4}>
+                    <StatCard title="Days of Vacation Taken" value={`${daysTaken} days`} />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                    <StatCard title="Pending Requests" value={demandes.filter(d => d.statut === 'EN_ATTENTE').length} />
+                </Grid>
+                <Grid item xs={12}>
+                    <LeaveTypeChart data={demandes} />
                 </Grid>
             </Grid>
-
-            {openForm && (
-                <DemandeForm
-                    isOpen={openForm}
-                    onClose={() => {
-                        setOpenForm(false);
-                        if (user.id) fetchDemandes(user.id);
-                    }}
-                />
-            )}
+            <DemandeForm
+                isOpen={openForm}
+                onClose={() => setOpenForm(false)}
+                onAddDemande={handleAddDemande}
+            />
         </Box>
     );
 };

@@ -1,5 +1,20 @@
 import React, { useState } from "react";
-import "./demandeForm.css";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    Button,
+    Grid,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Snackbar,
+    Alert,
+    DialogContentText,
+} from "@mui/material";
 import { addDemande } from "../../apiService/addElementApi";
 
 const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
@@ -8,14 +23,8 @@ const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
         dateDebut: "",
         dateFin: "",
         motif: "",
-        statut: "",
-        commentaire: "",
-        dateCreation: "",
-        dateDecision: ""
-        // idUser: ""
     });
-
-    if (!isOpen) return null;
+    const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -25,91 +34,120 @@ const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            setNotification({ open: true, message: "Erreur: Utilisateur non identifié.", severity: "error" });
+            return;
+        }
+
         const payload = {
             type: formData.type,
             dateDebut: `${formData.dateDebut}T00:00:00`,
             dateFin: `${formData.dateFin}T00:00:00`,
-            motif: formData.motif || "Demande depuis formulaire",
-            statut: "EN_ATTENTE", // valeur par défaut
-            commentaire: formData.commentaire || "",
-            dateCreation: new Date().toISOString().slice(0, 19),
-            dateDecision: null,
-            idUser: 1 //test
+            motif: formData.motif || "Demande de congé",
+            idUser: Number(userId),
         };
 
         try {
             const response = await addDemande(payload);
             if (response) {
-                console.log("Demande ajoutée avec succès");
+                setNotification({ open: true, message: "Demande de congé ajoutée avec succès !", severity: "success" });
                 onAddDemande && onAddDemande(response);
                 onClose();
             } else {
-                console.log("Erreur lors de l'ajout");
+                setNotification({ open: true, message: "Erreur lors de l'ajout de la demande.", severity: "error" });
             }
         } catch (error) {
-            console.error("Erreur dans l'ajout:", error);
+            setNotification({ open: true, message: "Erreur: " + error.message, severity: "error" });
         }
     };
 
+    const handleCloseNotification = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setNotification({ ...notification, open: false });
+    };
+
     return (
-        <div className="overlay">
-            <div className="popup">
-                <h2>Nouvelle demande de congé</h2>
-                <form onSubmit={handleSubmit}>
-                    <label>
-                        Type de congé :
-                        <select
-                            name="type"
-                            value={formData.type}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">--Choisir--</option>
-                            <option value="ANNUEL">Congé annuel</option>
-                            <option value="MALADIE">Congé maladie</option>
-                            <option value="EXCEPTIONNEL">Congé exceptionnel</option>
-                        </select>
-                    </label>
-                    <br />
-                    <label>
-                        Date début :
-                        <input
-                            type="date"
-                            name="dateDebut"
-                            value={formData.dateDebut}
-                            onChange={handleChange}
-                            required
-                        />
-                    </label>
-                    <br />
-                    <label>
-                        Date fin :
-                        <input
-                            type="date"
-                            name="dateFin"
-                            value={formData.dateFin}
-                            onChange={handleChange}
-                            required
-                        />
-                    </label>
-                    <br />
-                    <label>
-                        Commentaire :
-                        <textarea
-                            name="commentaire"
-                            value={formData.commentaire}
-                            onChange={handleChange}
-                        />
-                    </label>
-                    <br />
-                    <br />
-                    <button type="submit">Ajouter</button>
-                    <button type="button" onClick={onClose} className="btn-annuler">
-                        Annuler
-                    </button>
-                </form>
-            </div>
-        </div>
+        <>
+            <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.5rem' }}>New Vacation Request</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 3 }}>
+                        Please fill out the form below to request a new vacation.
+                    </DialogContentText>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <FormControl fullWidth required variant="outlined">
+                                <InputLabel>Vacation Type</InputLabel>
+                                <Select
+                                    name="type"
+                                    value={formData.type}
+                                    onChange={handleChange}
+                                    label="Vacation Type"
+                                >
+                                    <MenuItem value={"ANNUEL"}>Annual</MenuItem>
+                                    <MenuItem value={"MALADIE"}>Sickness</MenuItem>
+                                    <MenuItem value={"EXCEPTIONNEL"}>Exceptional</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                type="date"
+                                label="Start Date"
+                                name="dateDebut"
+                                value={formData.dateDebut}
+                                onChange={handleChange}
+                                required
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                type="date"
+                                label="End Date"
+                                name="dateFin"
+                                value={formData.dateFin}
+                                onChange={handleChange}
+                                required
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                label="Reason"
+                                name="motif"
+                                value={formData.motif}
+                                onChange={handleChange}
+                                multiline
+                                rows={4}
+                            />
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions sx={{ p: '16px 24px' }}>
+                    <Button onClick={onClose} color="inherit">Cancel</Button>
+                    <Button onClick={handleSubmit} variant="contained" size="large">Submit Request</Button>
+                </DialogActions>
+            </Dialog>
+            <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification}>
+                <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }} variant="filled">
+                    {notification.message}
+                </Alert>
+            </Snackbar>
+        </>
     );
 };
 

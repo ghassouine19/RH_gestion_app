@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import AddUserForm from "../componants/userComponant/AddUserForm";
 import UpdateUserForm from "../componants/userComponant/updateUserForm";
+import { DataGrid } from '@mui/x-data-grid';
 import {
-    Container, Typography, Button, Table, TableHead,
-    TableRow, TableCell, TableBody, IconButton, Paper,
-    Box, Select, MenuItem, FormControl, InputLabel
+    Container, Typography, Button, IconButton, Paper,
+    Box, Chip
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -17,26 +17,24 @@ import "./adminPage.css";
 
 const AdminPage = () => {
     const [users, setUsers] = useState([]);
-    const [filteredUsers, setFilteredUsers] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [formInitialData, setFormInitialData] = useState(null);
-    const [roleFilter, setRoleFilter] = useState("ALL");
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(true);
+
 
     useEffect(() => { fetchUsers(); }, []);
 
-    useEffect(() => {
-        if (roleFilter === "ALL") setFilteredUsers(users);
-        else setFilteredUsers(users.filter(u => u.role === roleFilter));
-    }, [roleFilter, users]);
-
     const fetchUsers = async () => {
+        setLoading(true);
         try {
             const data = await getAllUsers();
             setUsers(data);
         } catch (err) {
             console.error(err);
             setMessage("Erreur lors du chargement des utilisateurs.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -72,70 +70,118 @@ const AdminPage = () => {
         }
     };
 
-    const renderRoleIcon = (role) => {
+    const renderRole = (params) => {
+        const role = params.value;
+        let icon, label, color;
+
         switch (role) {
-            case "ADMIN": return <AdminPanelSettingsIcon color="primary" style={{ marginRight: 5 }} />;
-            case "RESPONSABLE": return <SupervisorAccountIcon color="success" style={{ marginRight: 5 }} />;
-            case "EMPLOYE": return <PersonIcon color="action" style={{ marginRight: 5 }} />;
-            default: return null;
+            case "ADMIN":
+                icon = <AdminPanelSettingsIcon />;
+                label = "Admin";
+                color = "primary";
+                break;
+            case "RESPONSABLE":
+                icon = <SupervisorAccountIcon />;
+                label = "Responsable";
+                color = "success";
+                break;
+            case "EMPLOYE":
+                icon = <PersonIcon />;
+                label = "Employé";
+                color = "info"
+                break;
+            default:
+                return null;
         }
+        return <Chip icon={icon} label={label} color={color} variant="outlined" size="small" />;
     };
 
+    const columns = [
+        { field: 'id', headerName: 'ID', width: 90 },
+        { field: 'nom', headerName: 'Nom', width: 150, editable: true },
+        { field: 'prenom', headerName: 'Prénom', width: 150, editable: true },
+        { field: 'email', headerName: 'Email', width: 200, editable: true },
+        {
+            field: 'role',
+            headerName: 'Rôle',
+            width: 150,
+            renderCell: renderRole,
+        },
+        {
+            field: 'dateEntree',
+            headerName: 'Date d entrée',
+            type: 'date',
+            width: 150,
+            valueGetter: (params) => {
+                if (params && params.value) {
+                    return new Date(params.value);
+                }
+                return null;
+            },
+        },
+        {
+            field: 'responsable',
+            headerName: 'Responsable',
+            width: 150,
+            valueGetter: (params) => {
+                if (params && params.value) {
+                    return `${params.value.nom} ${params.value.prenom}`;
+                }
+                return 'N/A';
+            },
+        },
+        {
+            field: 'actions',
+            headerName: 'Actions',
+            sortable: false,
+            width: 120,
+            renderCell: (params) => (
+                <>
+                    <IconButton color="primary" size="small" onClick={() => handleOpenEdit(params.row)}>
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id, params.row.nom)}>
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
+                </>
+            ),
+        },
+    ];
+
+
     return (
-        <Container maxWidth="lg" className="admin-container">
+        <Container maxWidth="xl" className="admin-container">
             <Typography variant="h4" gutterBottom className="admin-title">Gestion des utilisateurs</Typography>
 
             {message && <Typography variant="body1" className="admin-message">{message}</Typography>}
 
             <Box display="flex" justifyContent="space-between" mb={2}>
                 <Button variant="contained" color="primary" onClick={handleOpenAdd}>Ajouter un Collaborateur</Button>
-                <FormControl variant="outlined" size="small" style={{ minWidth: 150 }}>
-                    <InputLabel>Filtrer par rôle</InputLabel>
-                    <Select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} label="Filtrer par rôle">
-                        <MenuItem value="ALL">Tous</MenuItem>
-                        <MenuItem value="ADMIN">Admin</MenuItem>
-                        <MenuItem value="RESPONSABLE">Responsable</MenuItem>
-                        <MenuItem value="EMPLOYE">Employé</MenuItem>
-                    </Select>
-                </FormControl>
             </Box>
 
-            <Paper className="admin-table-wrapper" elevation={3}>
-                <Table>
-                    <TableHead className="admin-table-head">
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Nom</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Rôle</TableCell>
-                            <TableCell align="center">Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredUsers.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} align="center">Aucun utilisateur trouvé.</TableCell>
-                            </TableRow>
-                        ) : (
-                            filteredUsers.map(user => (
-                                <TableRow key={user.id} className="admin-table-row">
-                                    <TableCell>{user.id}</TableCell>
-                                    <TableCell>{user.nom}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell>{renderRoleIcon(user.role)}{user.role}</TableCell>
-                                    <TableCell align="center">
-                                        <IconButton color="primary" size="small" onClick={() => handleOpenEdit(user)}>
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton color="error" size="small" onClick={() => handleDelete(user.id, user.nom)}>
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
+            <Paper className="admin-table-wrapper" elevation={3} sx={{
+                height: 600,
+                width: '100%',
+                p: 3,
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.4)',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',
+            }}>
+                <DataGrid
+                    rows={users}
+                    columns={columns}
+                    loading={loading}
+                    pageSizeOptions={[5, 10, 25]}
+                    initialState={{
+                        pagination: {
+                          paginationModel: {
+                            pageSize: 10,
+                          },
+                        },
+                      }}
+                    checkboxSelection
+                    disableRowSelectionOnClick
+                />
             </Paper>
 
             {isFormOpen && formInitialData ? (
