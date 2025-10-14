@@ -4,7 +4,7 @@ import ResponsablePage from "../pages/ResponsablePage";
 import AdminPage from "../pages/AdminPage";
 import UserProfile from "../componants/userComponant/UserProfile";
 import Calendar from "../componants/userComponant/Calendar";
-
+import ProtectedRoute from "./ProtectedRoute";
 
 export const UserRoute = [
     {
@@ -12,22 +12,47 @@ export const UserRoute = [
         children :[
             {
                 path : "/user",
-                element : <DashboardPage />
+                element : (
+                    <ProtectedRoute
+                        element={<DashboardPage />}
+                        allowedRoles={["EMPLOYE", "ADMIN", "RESPONSABLE"]}
+                    />
+                ),
             },
             {
                 path : "/respo",
-                element: <ResponsablePage />
+                element: (
+                    <ProtectedRoute
+                        element={<ResponsablePage />}
+                        allowedRoles={["ADMIN", "RESPONSABLE"]}
+                    />
+                ),
             },
             {
                 path : "/admin",
-                element: <AdminPage />
+                element: (
+                    <ProtectedRoute
+                        element={<AdminPage />}
+                        allowedRoles={["ADMIN"]}
+                    />
+                ),
             },
             {
                 path : "/user/profile",
-                element: <UserProfile />
+                element: (
+                    <ProtectedRoute
+                        element={<UserProfile />}
+                        allowedRoles={["EMPLOYE", "ADMIN", "RESPONSABLE"]}
+                    />
+                ),
             },{
                 path : "/user/calendar",
-                element : <Calendar />
+                element : (
+                    <ProtectedRoute
+                        element={<Calendar />}
+                        allowedRoles={["ADMIN"]}
+                    />
+                ),
             }
         ]
     }

@@ -7,7 +7,9 @@ import com.example.sypexback.mapper.UserMapper;
 import com.example.sypexback.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,5 +86,43 @@ public class UserServiceImp implements UserService {
     @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    @Override
+    public byte[] getUserPhoto(Long id) {
+        return userRepository.findById(id)
+                .map(User::getPhoto)
+                .orElse(null);
+    }
+
+    @Override
+    public byte[] getUserDocument(Long id) {
+        return userRepository.findById(id)
+                .map(User::getDocument)
+                .orElse(null);
+    }
+
+    @Override
+    public void uploadUserPhoto(Long id, MultipartFile file) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable avec id : " + id));
+        try {
+            user.setPhoto(file.getBytes());
+            userRepository.save(user);
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de l’upload de la photo", e);
+        }
+    }
+
+    @Override
+    public void uploadUserDocument(Long id, MultipartFile file) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable avec id : " + id));
+        try {
+            user.setDocument(file.getBytes());
+            userRepository.save(user);
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de l’upload du document", e);
+        }
     }
 }

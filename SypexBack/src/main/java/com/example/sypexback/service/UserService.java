@@ -3,6 +3,7 @@ package com.example.sypexback.service;
 
 import com.example.sypexback.dto.UserDTO;
 import com.example.sypexback.entity.User;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.List;
@@ -18,6 +19,14 @@ public interface UserService {
 
     UserDTO createUser(UserDTO dto);
 
-    public User findByEmail(String email);
+    User findByEmail(String email);
+
+    byte[] getUserPhoto(Long id);
+
+    byte[] getUserDocument(Long id);
+
+    void uploadUserPhoto(Long id, MultipartFile file);
+
+    void uploadUserDocument(Long id, MultipartFile file);
 
 }

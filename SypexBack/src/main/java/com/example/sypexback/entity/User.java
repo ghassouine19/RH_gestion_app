@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,16 @@ public class User implements Serializable,UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
     private double soldeConge;
+    private String cin;
+    private String cnss;
+    private String rib;
+    private LocalDate dateNaissance;
+    private LocalDate dateEntree;
+    private LocalDate dateSortie;
+    @Lob
+    private byte[] photo;
+    @Lob
+    private byte[] document;
 
     @OneToMany(mappedBy = "user")
     private List<Demande> demandes;

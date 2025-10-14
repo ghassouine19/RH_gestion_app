@@ -1,37 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./userProfile.css";
-import img from "./profilImg.jpg";
+import img from "./profilImg.jpg"; // image par défaut
 import { DataGrid } from "@mui/x-data-grid";
 import EditProfileForm from "./EditProfileForm";
 import { getDemandeByUserId, getUserById } from "../../apiService/getElementApi";
+import { uploadUserPhoto } from "../../apiService/addElementApi";
 
 const UserProfile = () => {
     const [userData, setUserData] = useState(null);
     const [demandes, setDemandes] = useState([]);
     const [showEditPopup, setShowEditPopup] = useState(false);
+    const fileInputRef = useRef(null);
 
+    // Charger l'utilisateur et ses demandes
     useEffect(() => {
         const chargerDataUser = async () => {
             try {
                 const userId = localStorage.getItem("userId");
-                if (!userId) {
-                    console.error("Utilisateur non connecté !");
-                    return;
+                if (!userId) return console.error("Utilisateur non connecté !");
+
+                const data = await getUserById(userId);
+
+                // Si backend ne renvoie pas de photoUrl, on construit l'URL
+                if (data.photo) {
+                    data.photoUrl = `http://localhost:8080/api/users/${data.id}/photo`;
                 }
 
-                // Récupérer l'utilisateur
-                const data = await getUserById(userId);
                 setUserData(data);
 
-                // Récupérer ses demandes
                 let rows = await getDemandeByUserId(data.id);
+                if (!Array.isArray(rows)) rows = [rows];
 
-                // Si l'API renvoie un seul objet, on le met dans un tableau
-                if (!Array.isArray(rows)) {
-                    rows = [rows];
-                }
-
-                // Formater les demandes
                 const formattedRows = rows.map((demande, index) => ({
                     id: demande.id || index + 1,
                     dateDebut: demande.dateDebut,
@@ -45,7 +44,6 @@ const UserProfile = () => {
                 }));
 
                 setDemandes(formattedRows);
-                console.log("Demandes formatées:", formattedRows);
             } catch (err) {
                 console.log(err.message);
             }
@@ -53,6 +51,23 @@ const UserProfile = () => {
         chargerDataUser();
     }, []);
 
+    const handleImageClick = () => fileInputRef.current.click();
+
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (!file || !userData) return;
+
+        try {
+            await uploadUserPhoto(userData.id, file);
+            // Met à jour la photo après upload
+            setUserData({
+                ...userData,
+                photoUrl: `http://localhost:8080/api/users/${userData.id}/photo?${new Date().getTime()}`,
+            });
+        } catch (err) {
+            console.error("Erreur lors de l'upload de la photo", err);
+        }
+    };
 
     const columns = [
         { field: "id", headerName: "Id Demande", width: 120 },
@@ -63,18 +78,28 @@ const UserProfile = () => {
         { field: "motif", headerName: "Motif", width: 180 },
         { field: "statut", headerName: "Statut", width: 140 },
         { field: "type", headerName: "Type", width: 140 },
-        { field: "commentaire", headerName: "Commentaire", width: 200 }
+        { field: "commentaire", headerName: "Commentaire", width: 200 },
     ];
 
-    if (!userData) {
-        return <p>Chargement de la page...</p>;
-    }
+    if (!userData) return <p>Chargement de la page...</p>;
 
     return (
         <div className="profile-container">
             <div className="profile-header">
                 <div className="profile-photo">
-                    <img src={img} alt="Profil" />
+                    <img
+                        src={userData.photoUrl || img} // <-- utilise la photo backend si existe
+                        alt="Profil"
+                        onClick={handleImageClick}
+                        style={{ cursor: "pointer" }}
+                    />
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                    />
                 </div>
                 <div className="profile-info">
                     <h2>{userData.nom} {userData.prenom}</h2>

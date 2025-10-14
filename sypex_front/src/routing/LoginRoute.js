@@ -1,5 +1,6 @@
 import NoLayout from "../layout/NoLayout";
 import LoginPage from "../pages/LoginPage";
+import Unauthorized from "../componants/userComponant/Unauthorized";
 
 
 export const LoginRoute = [
@@ -9,6 +10,10 @@ export const LoginRoute = [
             {
                 path : "/login",
                 element : <LoginPage />
+            },
+            {
+                path : "/unauthorized",
+                element : <Unauthorized />
             }
         ]
     }

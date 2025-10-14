@@ -5,7 +5,6 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { getAllDemandes,getUserById} from "../../apiService/getElementApi";
 
-// --- decode JWT
 function parseJwt(token) {
     try {
         const base64Url = token.split(".")[1];
@@ -73,7 +72,6 @@ const Calendar = () => {
                 const demandes = await getAllDemandes();
                 if (!Array.isArray(demandes)) return;
 
-                // 🔥 récupérer nom + prénom depuis backend pour chaque demande
                 const demandesWithUser = await Promise.all(
                     demandes.map(async (d) => {
                         try {

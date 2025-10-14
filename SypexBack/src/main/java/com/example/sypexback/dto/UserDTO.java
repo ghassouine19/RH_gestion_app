@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,4 +20,12 @@ public class UserDTO {
     private Role role;
     private double soldeConge;
     private Long responsableId;
+    private String cin;
+    private String cnss;
+    private String rib;
+    private LocalDate dateNaissance;
+    private LocalDate dateEntree;
+    private LocalDate dateSortie;
+    private String photoRrl;
+    private String documentUrl;
 }
