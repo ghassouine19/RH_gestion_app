@@ -1,3 +1,4 @@
+export const BASE_URL = "http://localhost:8081/api";
 
 const getToken = () => localStorage.getItem("token");
 
@@ -80,9 +81,3 @@ export const upDateData = async (url,data) =>{
 
     return await response.json();
 }
-
-
-
-
-
-

@@ -1,5 +1,3 @@
-import {deleteData} from "./httpService";
+import {deleteData,BASE_URL} from "./httpService";
 
-const BASE = "http://localhost:8080/api";
-
-export const deleteUser = (id) => deleteData(`${BASE}/users/deleteUser/${id}`);
+export const deleteUser = (id) => deleteData(`${BASE_URL}/users/deleteUser/${id}`);

@@ -1,12 +1,10 @@
-import {upDateData} from "./httpService";
+import {upDateData, BASE_URL} from "./httpService";
 
-const BASE = "http://localhost:8080/api";
-
-export const updateUser = (id,data) => upDateData(`${BASE}/users/updateUser/${id}`,data);
-export const updateDemande = (statut,id) => upDateData(`${BASE}/demandes/${id}/statut`, statut);
+export const updateUser = (id,data) => upDateData(`${BASE_URL}/users/updateUser/${id}`,data);
+export const updateDemande = (statut,id) => upDateData(`${BASE_URL}/demandes/${id}/statut`, statut);
 
 export const changePasswordApi = async (data, token) => {
-    return fetch("http://localhost:8080/api/auth/change-password", {
+    return fetch(`${BASE_URL}/auth/change-password`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",

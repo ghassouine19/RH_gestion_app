@@ -39,6 +39,15 @@ export const UserRoute = [
                 ),
             },
             {
+                path : "/user/profile/:userId",
+                element: (
+                    <ProtectedRoute
+                        element={<UserProfile />}
+                        allowedRoles={["ADMIN"]}
+                    />
+                ),
+            },
+            {
                 path : "/user/profile",
                 element: (
                     <ProtectedRoute
@@ -51,7 +60,7 @@ export const UserRoute = [
                 element : (
                     <ProtectedRoute
                         element={<Calendar />}
-                        allowedRoles={["ADMIN"]}
+                        allowedRoles={["EMPLOYE", "ADMIN", "RESPONSABLE"]}
                     />
                 ),
             },

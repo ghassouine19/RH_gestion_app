@@ -23,6 +23,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
 import WorkIcon from '@mui/icons-material/Work';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
+import { BASE_URL } from "../../apiService/httpService";
 
 const ROLES = ["RESPONSABLE", "ADMIN", "EMPLOYE"];
 
@@ -62,7 +63,7 @@ const AddUserForm = ({ isOpen, onClose, onAddUser }) => {
         }
 
         try {
-            const response = await fetch("http://localhost:8080/api/auth/register", {
+            const response = await fetch(`${BASE_URL}/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

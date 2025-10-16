@@ -196,6 +196,7 @@ const DrawerBar =({open,handleDrawerClose})=>{
                 {section2.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                         <ListItemButton
+                            onClick={()=>{navigate(item.path)}}
                             sx={{
                                 minHeight: 48,
                                 justifyContent: open ? 'initial' : 'center',

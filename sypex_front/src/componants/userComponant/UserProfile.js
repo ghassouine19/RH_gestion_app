@@ -5,25 +5,28 @@ import { DataGrid } from "@mui/x-data-grid";
 import EditProfileForm from "./EditProfileForm";
 import { getDemandeByUserId, getUserById } from "../../apiService/getElementApi";
 import { uploadUserPhoto } from "../../apiService/addElementApi";
+import { useParams } from "react-router-dom";
+import { BASE_URL } from "../../apiService/httpService";
 
 const UserProfile = () => {
     const [userData, setUserData] = useState(null);
     const [demandes, setDemandes] = useState([]);
     const [showEditPopup, setShowEditPopup] = useState(false);
     const fileInputRef = useRef(null);
+    const { userId: userIdFromParams } = useParams();
 
     // Charger l'utilisateur et ses demandes
     useEffect(() => {
         const chargerDataUser = async () => {
             try {
-                const userId = localStorage.getItem("userId");
+                const userId = userIdFromParams || localStorage.getItem("userId");
                 if (!userId) return console.error("Utilisateur non connecté !");
 
                 const data = await getUserById(userId);
 
                 // Si backend ne renvoie pas de photoUrl, on construit l'URL
                 if (data.photo) {
-                    data.photoUrl = `http://localhost:8080/api/users/${data.id}/photo`;
+                    data.photoUrl = `${BASE_URL}/users/${data.id}/photo`;
                 }
 
                 setUserData(data);
@@ -49,7 +52,7 @@ const UserProfile = () => {
             }
         };
         chargerDataUser();
-    }, []);
+    }, [userIdFromParams]);
 
     const handleImageClick = () => fileInputRef.current.click();
 
@@ -62,7 +65,7 @@ const UserProfile = () => {
             // Met à jour la photo après upload
             setUserData({
                 ...userData,
-                photoUrl: `http://localhost:8080/api/users/${userData.id}/photo?${new Date().getTime()}`,
+                photoUrl: `${BASE_URL}/users/${userData.id}/photo?${new Date().getTime()}`,
             });
         } catch (err) {
             console.error("Erreur lors de l'upload de la photo", err);
@@ -83,6 +86,9 @@ const UserProfile = () => {
 
     if (!userData) return <p>Chargement de la page...</p>;
 
+    const isOwnProfile = !userIdFromParams || userIdFromParams === localStorage.getItem("userId");
+
+
     return (
         <div className="profile-container">
             <div className="profile-header">
@@ -90,16 +96,16 @@ const UserProfile = () => {
                     <img
                         src={userData.photoUrl || img} // <-- utilise la photo backend si existe
                         alt="Profil"
-                        onClick={handleImageClick}
-                        style={{ cursor: "pointer" }}
+                        onClick={isOwnProfile ? handleImageClick : null}
+                        style={{ cursor: isOwnProfile ? "pointer" : "default" }}
                     />
-                    <input
+                    {isOwnProfile && <input
                         type="file"
                         ref={fileInputRef}
                         style={{ display: "none" }}
                         onChange={handleFileChange}
                         accept="image/*"
-                    />
+                    />}
                 </div>
                 <div className="profile-info">
                     <h2>{userData.nom} {userData.prenom}</h2>
@@ -107,11 +113,11 @@ const UserProfile = () => {
                     <p><strong>ID :</strong> {userData.id}</p>
                     <p><strong>Rôle :</strong> {userData.role}</p>
                 </div>
-                <div className="form-button-container">
+                {isOwnProfile && <div className="form-button-container">
                     <button className="form-button-submit" onClick={() => setShowEditPopup(true)}>
                         Modifier mon password
                     </button>
-                </div>
+                </div>}
             </div>
 
             <div className="reservation-history">

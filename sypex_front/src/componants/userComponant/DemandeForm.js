@@ -16,6 +16,7 @@ import {
     DialogContentText,
 } from "@mui/material";
 import { addDemande } from "../../apiService/addElementApi";
+import { BASE_URL } from "../../apiService/httpService";
 
 const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
     const [formData, setFormData] = useState({
@@ -25,6 +26,7 @@ const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
         motif: "",
     });
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+    const [newDemandeId, setNewDemandeId] = useState(null);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -52,13 +54,33 @@ const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
             const response = await addDemande(payload);
             if (response) {
                 setNotification({ open: true, message: "Demande de congé ajoutée avec succès !", severity: "success" });
+                setNewDemandeId(response.id);
                 onAddDemande && onAddDemande(response);
-                onClose();
             } else {
                 setNotification({ open: true, message: "Erreur lors de l'ajout de la demande.", severity: "error" });
             }
         } catch (error) {
             setNotification({ open: true, message: "Erreur: " + error.message, severity: "error" });
+        }
+    };
+
+    const handleDownloadPdf = async () => {
+        if (newDemandeId) {
+            try {
+                const response = await fetch(`${BASE_URL}/demandes/${newDemandeId}/pdf`);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `demande-${newDemandeId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error("Error downloading PDF:", error);
+                setNotification({ open: true, message: "Erreur lors du téléchargement du PDF.", severity: "error" });
+            }
         }
     };
 
@@ -138,8 +160,9 @@ const DemandeForm = ({ isOpen, onClose, onAddDemande }) => {
                     </Grid>
                 </DialogContent>
                 <DialogActions sx={{ p: '16px 24px' }}>
-                    <Button onClick={onClose} color="inherit">Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained" size="large">Submit Request</Button>
+                    <Button onClick={onClose} color="inherit">{newDemandeId ? "Close" : "Cancel"}</Button>
+                    <Button onClick={handleSubmit} variant="contained" size="large" disabled={!!newDemandeId}>Submit Request</Button>
+                    <Button onClick={handleDownloadPdf} variant="contained" size="large" disabled={!newDemandeId}>Download PDF</Button>
                 </DialogActions>
             </Dialog>
             <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification}>

@@ -14,6 +14,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfWriter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -158,5 +165,37 @@ public class DemandeServiceImp implements DemandeService {
         } else {
             return demandeRepository.findAll();
         }
+    }
+
+    @Override
+    public List<Demande> getDemandesByResponsable(Long responsableId) {
+        List<User> users = userRepository.findAllByResponsableId(responsableId);
+        return users.stream()
+                .flatMap(user -> demandeRepository.findByUser_Id(user.getId()).stream())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public byte[] generateDemandePdf(Long id) throws DocumentException, IOException {
+        Demande demande = demandeRepository.findById(id).orElseThrow(() -> new RuntimeException("Demande not found"));
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document();
+        PdfWriter.getInstance(document, baos);
+
+        document.open();
+
+        document.add(new Paragraph("Demande de Conge"));
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("Employe: " + demande.getUser().getNom() + " " + demande.getUser().getPrenom()));
+        document.add(new Paragraph("Date de debut: " + demande.getDateDebut().toString()));
+        document.add(new Paragraph("Date de fin: " + demande.getDateFin().toString()));
+        document.add(new Paragraph("Type de conge: " + demande.getType().toString()));
+        document.add(new Paragraph("Statut: " + demande.getStatut().toString()));
+        document.add(new Paragraph("Motif: " + demande.getMotif()));
+
+        document.close();
+
+        return baos.toByteArray();
     }
 }

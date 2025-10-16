@@ -1,19 +1,18 @@
-import { getData } from "./httpService";
+import { getData,BASE_URL } from "./httpService";
 
 const responsableId = localStorage.getItem("userId");
 
-const BASE = "http://localhost:8080/api";
 
-export const getAllUsers = () => getData(`${BASE}/users/all`);
-export const getAllDemandes = () => getData(`${BASE}/demandes/all`);
+export const getAllUsers = () => getData(`${BASE_URL}/users/all`);
+export const getAllDemandes = () => getData(`${BASE_URL}/demandes/all`);
 
-export const getUserById = (id) => getData(`${BASE}/users/user/${id}`);
-export const getDemandeById = (id) => getData(`${BASE}/demandes/demande/${id}`);
+export const getUserById = (id) => getData(`${BASE_URL}/users/user/${id}`);
+export const getDemandeById = (id) => getData(`${BASE_URL}/demandes/demande/${id}`);
 
-export const getDemandeByUserId = (id) => getData(`${BASE}/demandes/userDemande/${id}`);
+export const getDemandeByUserId = (id) => getData(`${BASE_URL}/demandes/userDemande/${id}`);
 
 export const getDemandesForResponsable = (responsableId) => {
     if (!responsableId) return Promise.resolve([]);
-    return getData(`${BASE}/demandes/my-employees/${responsableId}`);
+    return getData(`${BASE_URL}/demandes/my-employees/${responsableId}`);
 }
 

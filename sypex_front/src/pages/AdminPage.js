@@ -13,7 +13,7 @@ import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import PersonIcon from "@mui/icons-material/Person";
 import { getAllUsers } from "../apiService/getElementApi";
 import { deleteUser} from "../apiService/deleteElementApi";
-import "./adminPage.css";
+import { useNavigate } from "react-router-dom";
 
 const AdminPage = () => {
     const [users, setUsers] = useState([]);
@@ -21,6 +21,7 @@ const AdminPage = () => {
     const [formInitialData, setFormInitialData] = useState(null);
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
 
     useEffect(() => { fetchUsers(); }, []);
@@ -68,6 +69,10 @@ const AdminPage = () => {
             console.error(err);
             setMessage("Erreur lors de la suppression.");
         }
+    };
+
+    const handleRowClick = (params) => {
+        navigate(`/user/profile/${params.id}`);
     };
 
     const renderRole = (params) => {
@@ -179,6 +184,7 @@ const AdminPage = () => {
                           },
                         },
                       }}
+                    onRowClick={handleRowClick}
                     checkboxSelection
                     disableRowSelectionOnClick
                 />

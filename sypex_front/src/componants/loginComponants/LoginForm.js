@@ -4,6 +4,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./loginForm.css";
+import { BASE_URL } from "../../apiService/httpService";
 
 const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +23,7 @@ const LoginForm = () => {
         setError("");
 
         try {
-            const response = await fetch("http://localhost:8080/api/auth/login", {
+            const response = await fetch(`${BASE_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
