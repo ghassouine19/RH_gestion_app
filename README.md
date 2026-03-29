@@ -249,10 +249,6 @@ Contribuer
 3. Commitez vos changements : `git commit -m "Description concise"`  
 4. Ouvrez une Pull Request.
 
-Licence
--------
-Ajoutez la licence souhaitée (ex. MIT) dans un fichier `LICENSE`.
-
 Auteurs / Contact
 -----------------
 - Auteur principal : ghassouine19  
