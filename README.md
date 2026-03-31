@@ -248,7 +248,7 @@ Contribuer
 2. Créez une branche : `git checkout -b feat/ma-fonctionnalite`  
 3. Commitez vos changements : `git commit -m "Description concise"`  
 4. Ouvrez une Pull Request.
-
+   
 Auteurs / Contact
 -----------------
 - Auteur principal : ghassouine19  
